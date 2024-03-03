@@ -1,6 +1,6 @@
 -- This module is copied from the Elm compiler with small changes
 -- https://github.com/elm/compiler/blob/94715a520f499591ac6901c8c822bc87cd1af24f/compiler/src/Reporting/Annotation.hs
-
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wall #-}
 module Reporting.Annotation
   ( Located(..)
@@ -22,7 +22,7 @@ import Data.Coapplicative
 import Data.Binary (Binary, get, put)
 import Data.Word (Word16)
 import Data.String (unwords)
-
+import Data.Data
 
 
 -- LOCATED
@@ -30,7 +30,7 @@ import Data.String (unwords)
 
 data Located a =
   At Region a  -- PERF see if unpacking region is helpful
-  deriving Eq
+  deriving (Data, Eq)
 
 
 instance (Show a) => Show (Located a) where
@@ -81,7 +81,7 @@ data Position =
   Position
     {-# UNPACK #-} !Word16
     {-# UNPACK #-} !Word16
-  deriving Eq
+  deriving (Data, Eq)
 
 
 at :: Position -> Position -> a -> Located a
@@ -94,7 +94,7 @@ at start end a =
 
 
 data Region = Region Position Position
-  deriving Eq
+  deriving (Data, Eq)
 
 
 instance Show Region where

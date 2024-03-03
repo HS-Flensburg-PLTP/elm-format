@@ -1,11 +1,15 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module ElmFormat.AST.PublicAST.MaybeF where
 
 
 import Data.Coapplicative
+import Data.Data
+
 data MaybeF f a
     = JustF (f a)
     | NothingF a
-    deriving (Functor)
+    deriving (Data, Functor)
 
 instance Prelude.Foldable f => Prelude.Foldable (MaybeF f) where
     foldMap f (JustF fa) = Prelude.foldMap f fa

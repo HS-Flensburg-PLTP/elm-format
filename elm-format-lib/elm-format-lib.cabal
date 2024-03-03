@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -26,6 +26,15 @@ library
       CommandLine.ResolveFiles
       CommandLine.TransformFiles
       ElmFormat.AST.PublicAST
+      ElmFormat.AST.PublicAST.Comment
+      ElmFormat.AST.PublicAST.Config
+      ElmFormat.AST.PublicAST.Core
+      ElmFormat.AST.PublicAST.Expression
+      ElmFormat.AST.PublicAST.MaybeF
+      ElmFormat.AST.PublicAST.Module
+      ElmFormat.AST.PublicAST.Pattern
+      ElmFormat.AST.PublicAST.Reference
+      ElmFormat.AST.PublicAST.Type
       ElmFormat.AST.Shared
       ElmFormat.ImportInfo
       ElmFormat.KnownContents
@@ -44,15 +53,6 @@ library
       Elm.String
       ElmFormat.AST.BinaryOperatorPrecedence
       ElmFormat.AST.PatternMatching
-      ElmFormat.AST.PublicAST.Comment
-      ElmFormat.AST.PublicAST.Config
-      ElmFormat.AST.PublicAST.Core
-      ElmFormat.AST.PublicAST.Expression
-      ElmFormat.AST.PublicAST.MaybeF
-      ElmFormat.AST.PublicAST.Module
-      ElmFormat.AST.PublicAST.Pattern
-      ElmFormat.AST.PublicAST.Reference
-      ElmFormat.AST.PublicAST.Type
       ElmFormat.Render.Box
       ElmFormat.Render.ElmStructure
       Parse.Binop

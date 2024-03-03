@@ -1,9 +1,11 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
-module ElmFormat.AST.PublicAST.Module (Module(..), fromModule, toModule) where
+module ElmFormat.AST.PublicAST.Module (Module(..), TopLevelStructure(..), fromModule, toModule) where
 
+import Data.Data
 import ElmFormat.AST.PublicAST.Core
 import ElmFormat.AST.PublicAST.Comment
 import ElmFormat.AST.PublicAST.Expression
@@ -139,6 +141,7 @@ data TopLevelStructure
         }
     | Comment_tls Comment
     | TODO_TopLevelStructure String
+    deriving (Data)
 
 fromTopLevelStructures :: Config -> ASTNS Located [UppercaseIdentifier] 'TopLevelNK -> List (MaybeF LocatedIfRequested TopLevelStructure)
 fromTopLevelStructures config (I.Fix (At _ (AST.TopLevel decls))) =

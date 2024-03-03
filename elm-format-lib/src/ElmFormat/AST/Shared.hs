@@ -1,10 +1,12 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module ElmFormat.AST.Shared where
 
 import Control.Applicative
 import Data.Coapplicative
+import Data.Data
 import Data.Int (Int64)
 import GHC.Generics
 import Data.Text (Text)
@@ -21,7 +23,7 @@ type List a = [a]
 
 newtype LowercaseIdentifier =
     LowercaseIdentifier String
-    deriving (Eq, Ord)
+    deriving (Data, Eq, Ord)
 
 instance Show LowercaseIdentifier where
     show (LowercaseIdentifier name) = name
@@ -29,12 +31,12 @@ instance Show LowercaseIdentifier where
 
 newtype UppercaseIdentifier =
     UppercaseIdentifier String
-    deriving (Eq, Ord, Show)
+    deriving (Data, Eq, Ord, Show)
 
 
 newtype SymbolIdentifier =
     SymbolIdentifier String
-    deriving (Eq, Ord, Show)
+    deriving (Data, Eq, Ord, Show)
 
 
 data Commented c a =
@@ -53,19 +55,19 @@ instance Coapplicative (Commented c) where
 data IntRepresentation
   = DecimalInt
   | HexadecimalInt
-  deriving (Eq, Show, Generic)
+  deriving (Data, Eq, Show, Generic)
 
 
 data FloatRepresentation
   = DecimalFloat
   | ExponentFloat
-  deriving (Eq, Show, Generic)
+  deriving (Data, Eq, Show, Generic)
 
 
 data StringRepresentation
     = SingleQuotedString
     | TripleQuotedString
-    deriving (Eq, Show, Generic)
+    deriving (Data, Eq, Show, Generic)
 
 
 data LiteralValue
@@ -74,14 +76,14 @@ data LiteralValue
     | Chr Char
     | Str String StringRepresentation
     | Boolean Bool
-    deriving (Eq, Show)
+    deriving (Data, Eq, Show)
 
 
 data Ref ns
     = VarRef ns LowercaseIdentifier
     | TagRef ns UppercaseIdentifier
     | OpRef SymbolIdentifier
-    deriving (Eq, Ord, Show, Functor)
+    deriving (Data, Eq, Ord, Show, Functor)
 
 refFromText :: Text -> Maybe (Ref ())
 refFromText text =
@@ -101,4 +103,4 @@ refFromText text =
 
 data UnaryOperator =
     Negative
-    deriving (Eq, Show)
+    deriving (Data, Eq, Show)

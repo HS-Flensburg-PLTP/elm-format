@@ -34,3 +34,5 @@ matchType (pat : restPat) (I.Fix (At region (FunctionType (C eol typ) restTyp mu
             matchType restPat nextTyp
     in
     ( (pat, typ) : pats, retType )
+    -- just to prevent non-exhaustive exceptions
+matchType _ typ = ( [], typ)

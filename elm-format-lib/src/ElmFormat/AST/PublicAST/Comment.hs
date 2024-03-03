@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module ElmFormat.AST.PublicAST.Comment (Comment(..), mkComment, fromComment, CommentDisplay(..), CommentType(..)) where
 
 import ElmFormat.AST.PublicAST.Core
@@ -6,6 +7,7 @@ import qualified AST.V0_16 as AST
 import qualified Data.List as List
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Data
 
 
 data Comment
@@ -13,7 +15,7 @@ data Comment
         { text :: Text
         , display :: CommentDisplay
         }
-    deriving (Show)
+    deriving (Data, Show)
 
 mkComment :: AST.Comment -> Comment
 mkComment = \case
@@ -28,13 +30,13 @@ mkComment = \case
             (CommentDisplay LineComment)
 
     AST.CommentTrickOpener ->
-        error "TODO: CommentTrickOpener"
+        Comment "CommentTrickOpener" (CommentDisplay LineComment)
 
     AST.CommentTrickCloser ->
-        error "TODO: CommentTrickCloser"
+        Comment "CommentTrickCloser" (CommentDisplay LineComment)
 
     AST.CommentTrickBlock _ ->
-        error "TODO: CommentTrickCloser"
+        Comment "CommentTrickBlock" (CommentDisplay LineComment)
 
 fromComment :: Comment -> AST.Comment
 fromComment = \case
@@ -69,7 +71,7 @@ newtype CommentDisplay =
     CommentDisplay
         { commentType :: CommentType
         }
-    deriving (Show, Generic)
+    deriving (Data, Show, Generic)
 
 instance ToJSON CommentDisplay where
     toEncoding = genericToEncoding defaultOptions
@@ -80,7 +82,7 @@ instance FromJSON CommentDisplay
 data CommentType
     = BlockComment
     | LineComment
-    deriving (Show, Generic)
+    deriving (Data, Show, Generic)
 
 instance ToJSON CommentType where
     toEncoding = genericToEncoding defaultOptions

@@ -1,5 +1,8 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module ElmFormat.AST.PublicAST.Reference (Reference(..),mkReference,toRef) where
 
+import Data.Data
 import ElmFormat.AST.PublicAST.Core
 
 
@@ -11,6 +14,7 @@ data Reference
     | VariableReference
         { name :: Ref ()
         }
+    deriving (Data)
 
 mkReference :: Ref [UppercaseIdentifier] -> Reference
 mkReference = \case

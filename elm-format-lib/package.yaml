@@ -56,6 +56,15 @@ library:
     - CommandLine.ResolveFiles
     - CommandLine.TransformFiles
     - ElmFormat.AST.PublicAST
+    - ElmFormat.AST.PublicAST.Comment
+    - ElmFormat.AST.PublicAST.Config
+    - ElmFormat.AST.PublicAST.Core
+    - ElmFormat.AST.PublicAST.Expression
+    - ElmFormat.AST.PublicAST.MaybeF
+    - ElmFormat.AST.PublicAST.Module
+    - ElmFormat.AST.PublicAST.Pattern
+    - ElmFormat.AST.PublicAST.Reference
+    - ElmFormat.AST.PublicAST.Type
     - ElmFormat.AST.Shared
     - ElmFormat.ImportInfo
     - ElmFormat.KnownContents

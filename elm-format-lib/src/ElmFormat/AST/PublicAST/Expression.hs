@@ -1,10 +1,11 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module ElmFormat.AST.PublicAST.Expression (Expression(..), Definition(..), DefinitionBuilder, TypedParameter(..), mkDefinitions, fromDefinition) where
+module ElmFormat.AST.PublicAST.Expression (CaseBranch(..), Expression(..), Definition(..), DefinitionBuilder, LetDeclaration(..), TypedParameter(..), mkDefinitions, fromDefinition) where
 
 import ElmFormat.AST.PublicAST.Core
 import ElmFormat.AST.PublicAST.Reference
@@ -20,6 +21,7 @@ import ElmFormat.AST.PublicAST.Comment
 import Reporting.Annotation (Located(At))
 import Data.Maybe (mapMaybe, fromMaybe)
 import Data.Text (Text)
+import Data.Data
 import qualified Data.Either as Either
 import qualified Data.Text as Text
 import qualified ElmFormat.AST.BinaryOperatorPrecedence as BinaryOperatorPrecedence
@@ -44,6 +46,7 @@ instance ToJSON BinaryOperation where
 data LetDeclaration
     = LetDefinition Definition
     | Comment_ld Comment
+    deriving (Data)
 
 mkLetDeclarations :: Config -> List (ASTNS Located [UppercaseIdentifier] 'LetDeclarationNK) -> List (MaybeF LocatedIfRequested LetDeclaration)
 mkLetDeclarations config decls =
@@ -98,6 +101,7 @@ data CaseBranch
         { pattern_cb :: LocatedIfRequested Pattern
         , body :: MaybeF LocatedIfRequested Expression
         }
+    deriving (Data)
 
 instance ToPublicAST 'CaseBranchNK where
     type PublicAST 'CaseBranchNK = CaseBranch
@@ -176,6 +180,7 @@ data Expression
     | GLShader
         { shaderSource :: String
         }
+    deriving (Data)
 
 
 instance ToPublicAST 'ExpressionNK where
@@ -552,6 +557,7 @@ newtype FunctionApplicationDisplay
     = FunctionApplicationDisplay
         { showAs :: FunctionApplicationShowAs
         }
+    deriving (Data)
 
 instance ToMaybeJSON FunctionApplicationDisplay where
     toMaybeEncoding = \case
@@ -572,13 +578,14 @@ data FunctionApplicationShowAs
     = ShowAsRecordAccess
     | ShowAsInfix
     | ShowAsFunctionApplication
+    deriving (Data)
 
 
 newtype CaseDisplay
     = CaseDisplay
         { showAsIf :: Bool
         }
-    deriving (Generic)
+    deriving (Data, Generic)
 
 instance ToMaybeJSON CaseDisplay where
     toMaybeEncoding = \case
@@ -604,6 +611,7 @@ data TypedParameter
         { pattern_tp :: LocatedIfRequested Pattern
         , type_tp :: Maybe (LocatedIfRequested Type_)
         }
+    deriving (Data)
 
 instance ToJSON TypedParameter where
     toJSON = undefined
@@ -629,6 +637,7 @@ data Definition
         , expression :: LocatedIfRequested Expression
         }
     | TODO_Definition (List String)
+    deriving (Data)
 
 mkDefinition ::
     Config

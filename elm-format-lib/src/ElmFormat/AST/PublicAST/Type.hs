@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -13,6 +14,7 @@ import qualified Data.ReversedList as ReversedList
 import Data.ReversedList (Reversed)
 import qualified Data.Either as Either
 import Data.Maybe (fromMaybe)
+import Data.Data
 
 
 data Type_
@@ -37,6 +39,7 @@ data Type_
         { returnType :: LocatedIfRequested Type_
         , argumentTypes :: List (LocatedIfRequested Type_) -- Non-empty
         }
+    deriving (Data)
 
 instance ToPublicAST 'TypeNK where
     type PublicAST 'TypeNK = Type_
@@ -226,7 +229,7 @@ data CustomTypeVariant
         { name :: UppercaseIdentifier
         , parameterTypes :: List (LocatedIfRequested Type_)
         }
-    deriving (Generic)
+    deriving (Data, Generic)
 
 mkCustomTypeVariant :: Config -> AST.NameWithArgs UppercaseIdentifier (ASTNS Located [UppercaseIdentifier] 'TypeNK) -> CustomTypeVariant
 mkCustomTypeVariant config (AST.NameWithArgs name args) =

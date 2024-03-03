@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 module ElmFormat.AST.PublicAST.Pattern (Pattern(..), mkListPattern) where
 
@@ -8,6 +9,7 @@ import ElmFormat.AST.PublicAST.Reference
 import qualified AST.V0_16 as AST
 import qualified Data.Either as Either
 import qualified ElmFormat.AST.PublicAST.Core as Core
+import Data.Data
 
 
 data Pattern
@@ -33,6 +35,7 @@ data Pattern
         { alias :: VariableDefinition
         , pattern :: LocatedIfRequested Pattern
         }
+    deriving (Data)
 
 mkListPattern :: List (LocatedIfRequested Pattern) -> Maybe (LocatedIfRequested Pattern) -> Pattern
 mkListPattern prefix rest =

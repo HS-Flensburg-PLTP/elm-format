@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -30,6 +31,7 @@ module ElmFormat.AST.PublicAST.Core
 import Data.Functor.Identity
 import Data.Aeson
 import Data.Aeson.Encoding.Internal (pair)
+import Data.Data
 import GHC.Generics
 import ElmFormat.AST.Shared
 import AST.V0_16 (NodeKind(..), Pair(..))
@@ -92,7 +94,7 @@ toRawAST =
 
 newtype ModuleName =
     ModuleName [UppercaseIdentifier]
-    deriving (Eq, Ord)
+    deriving (Data, Eq, Ord)
 
 instance Show ModuleName where
     show (ModuleName ns) = List.intercalate "." $ fmap (\(UppercaseIdentifier v) -> v) ns
@@ -120,6 +122,7 @@ newtype VariableDefinition
     = VariableDefinition
         { name :: LowercaseIdentifier
         }
+    deriving (Data)
 
 instance ToJSON VariableDefinition where
     toJSON = undefined
@@ -142,7 +145,7 @@ newtype RecordDisplay
     = RecordDisplay
         { fieldOrder :: List LowercaseIdentifier
         }
-    deriving (Generic)
+    deriving (Data, Generic)
 
 instance ToJSON RecordDisplay where
     toEncoding = genericToEncoding defaultOptions
@@ -150,7 +153,7 @@ instance ToJSON RecordDisplay where
 
 newtype LocatedIfRequested a
     = LocatedIfRequested (MaybeF Located a)
-    deriving (Functor)
+    deriving (Data, Functor)
 
 instance Coapplicative LocatedIfRequested where
     extract (LocatedIfRequested a) = extract a

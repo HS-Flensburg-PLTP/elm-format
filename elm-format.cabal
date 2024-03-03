@@ -1,6 +1,6 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -70,7 +70,6 @@ test-suite elm-format-tests
       ElmFormat.CliFlags
       ElmFormat.Messages
       ElmFormat.Version
-      Build_elm_format
       Paths_elm_format
   autogen-modules:
       Paths_elm_format
