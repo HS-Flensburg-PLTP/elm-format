@@ -140,6 +140,9 @@ data TopLevelStructure
         , variants :: List CustomTypeVariant
         }
     | Comment_tls Comment
+    | Port
+        { name_p :: LowercaseIdentifier
+        , type_p :: Maybe (LocatedIfRequested Type_) }
     | TODO_TopLevelStructure String
     deriving (Data)
 
@@ -157,7 +160,6 @@ fromTopLevelStructures config (I.Fix (At _ (AST.TopLevel decls))) =
                             Right def
 
                         AST.TypeAlias c1 (C (c2, c3) (AST.NameWithArgs name args)) (C c4 t) ->
-
                             Left $ TypeAlias name (fmap (\(C c a) -> a) args) (fromRawAST config t)
 
                         AST.Datatype (C (c1, c2) (AST.NameWithArgs name args)) variants ->
@@ -165,6 +167,9 @@ fromTopLevelStructures config (I.Fix (At _ (AST.TopLevel decls))) =
                                 name
                                 ((\(C c a) -> a) <$> args)
                                 ((\(C c a) -> mkCustomTypeVariant config a) <$> AST.toCommentedList variants)
+
+                        AST.PortAnnotation (C _ lowercaseIdent) _ t ->
+                            Left $ Port lowercaseIdent (Just (fromRawAST config t))
 
                         other ->
                             Left $ TODO_TopLevelStructure ("TODO: " ++ show other)
