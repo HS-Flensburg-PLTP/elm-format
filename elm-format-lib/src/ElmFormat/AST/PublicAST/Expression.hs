@@ -25,8 +25,6 @@ import Data.Data
 import qualified Data.Either as Either
 import qualified Data.Text as Text
 import qualified ElmFormat.AST.BinaryOperatorPrecedence as BinaryOperatorPrecedence
-import ElmVersion (ElmVersion(Elm_0_19))
-
 
 data BinaryOperation
     = BinaryOperation
@@ -222,6 +220,7 @@ instance ToPublicAST 'ExpressionNK where
                     BinaryOperatorList
                         (fromRawAST config first)
                         (fmap (\(AST.BinopsClause c1 op c2 expr) -> BinaryOperation (mkReference op) (fromRawAST config expr)) rest)
+                    -- error ("invalid binary operator expression: " <> Text.unpack message)
             where
                 buildTree :: BinaryOperatorPrecedence.Tree (Ref [UppercaseIdentifier ]) (ASTNS Located [UppercaseIdentifier] 'ExpressionNK) -> MaybeF LocatedIfRequested Expression
                 buildTree (BinaryOperatorPrecedence.Leaf e) =
