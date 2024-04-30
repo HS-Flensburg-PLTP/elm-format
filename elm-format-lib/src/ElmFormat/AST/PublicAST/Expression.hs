@@ -25,6 +25,7 @@ import Data.Data
 import qualified Data.Either as Either
 import qualified Data.Text as Text
 import qualified ElmFormat.AST.BinaryOperatorPrecedence as BinaryOperatorPrecedence
+import ElmVersion (ElmVersion(Elm_0_19))
 
 
 data BinaryOperation
@@ -32,6 +33,7 @@ data BinaryOperation
         { operator :: Reference
         , term :: LocatedIfRequested Expression
         }
+    deriving(Data)
 
 instance ToJSON BinaryOperation where
     toJSON = undefined
@@ -140,12 +142,17 @@ instance FromJSON CaseBranch where
 
 data Expression
     = UnitLiteral
+    | UnsupportedLanguageFeature
     | LiteralExpression LiteralValue
     | VariableReferenceExpression Reference
     | FunctionApplication
         { function :: MaybeF LocatedIfRequested Expression
         , arguments :: List (MaybeF LocatedIfRequested Expression)
         , display_fa :: FunctionApplicationDisplay
+        }
+    | BinaryOperatorList
+        { first :: LocatedIfRequested Expression
+        , operations :: List BinaryOperation
         }
     | UnaryOperator
         { operator :: AST.UnaryOperator
@@ -211,8 +218,10 @@ instance ToPublicAST 'ExpressionNK where
                 Right tree ->
                     extract $ buildTree tree
 
-                Left message ->
-                    error ("invalid binary operator expression: " <> Text.unpack message)
+                Left _ ->
+                    BinaryOperatorList
+                        (fromRawAST config first)
+                        (fmap (\(AST.BinopsClause c1 op c2 expr) -> BinaryOperation (mkReference op) (fromRawAST config expr)) rest)
             where
                 buildTree :: BinaryOperatorPrecedence.Tree (Ref [UppercaseIdentifier ]) (ASTNS Located [UppercaseIdentifier] 'ExpressionNK) -> MaybeF LocatedIfRequested Expression
                 buildTree (BinaryOperatorPrecedence.Leaf e) =
@@ -298,7 +307,8 @@ instance ToPublicAST 'ExpressionNK where
                 (CaseDisplay False)
 
         AST.Range _ _ _ ->
-            error "Range syntax is not supported in Elm 0.19"
+            UnsupportedLanguageFeature
+            -- error "Range syntax is not supported in Elm 0.19"
 
         AST.GLShader shader ->
             GLShader shader
@@ -390,6 +400,11 @@ instance ToPairs Expression where
                 [ type_ "UnitLiteral"
                 ]
 
+        UnsupportedLanguageFeature ->
+            mconcat
+                [ type_ "UnsupportedLangueFeature"
+                ]
+
         LiteralExpression lit ->
             toPairs lit
 
@@ -408,6 +423,13 @@ instance ToPairs Expression where
             mconcat
                 [ type_ "UnaryOperator"
                 , "operator" .= operator
+                ]
+
+        BinaryOperatorList first operations ->
+            mconcat
+                [ type_ "BinaryOperatorList"
+                , "first" .= first
+                , "operations" .= operations
                 ]
 
         ListLiteral terms ->
