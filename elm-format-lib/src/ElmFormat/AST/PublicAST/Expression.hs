@@ -387,6 +387,11 @@ instance FromPublicAST 'ExpressionNK where
         GLShader shaderSource ->
             AST.GLShader shaderSource
 
+        UnsupportedLanguageFeature ->
+            error "Unintended use of this fork"
+
+        BinaryOperatorList _ _ ->
+            error "Unintended use of this fork"
 
 instance ToJSON Expression where
     toJSON = undefined
@@ -394,14 +399,20 @@ instance ToJSON Expression where
 
 instance ToPairs Expression where
     toPairs = \case
+        UnsupportedLanguageFeature ->
+            error "Unintended use of this fork"
+        
+        BinaryOperatorList _ _ ->
+            error "Unintended use of this fork"
+            -- mconcat
+            --     [ type_ "BinaryOperatorList"
+            --     , "first" .= first
+            --     , "operations" .= operations
+            --     ]
+
         UnitLiteral ->
             mconcat
                 [ type_ "UnitLiteral"
-                ]
-
-        UnsupportedLanguageFeature ->
-            mconcat
-                [ type_ "UnsupportedLangueFeature"
                 ]
 
         LiteralExpression lit ->
@@ -422,13 +433,6 @@ instance ToPairs Expression where
             mconcat
                 [ type_ "UnaryOperator"
                 , "operator" .= operator
-                ]
-
-        BinaryOperatorList first operations ->
-            mconcat
-                [ type_ "BinaryOperatorList"
-                , "first" .= first
-                , "operations" .= operations
                 ]
 
         ListLiteral terms ->

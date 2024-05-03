@@ -75,7 +75,7 @@ parsePrecedence' precedenceMap b ((a, op) : rest) [] =
 parsePrecedence' _ last [] [] = Right last
 parsePrecedence' precedenceMap prev stack ((op, next) : rest) =
     let
-        prec o = fromMaybe (Precedence 0 NonAssociate) $ Map.lookup o precedenceMap
+        prec o = fromMaybe (error ("operator is not defined: " <> show o)) $ Map.lookup o precedenceMap
     in
     case stack of
         (a, opPrev) : restStack
