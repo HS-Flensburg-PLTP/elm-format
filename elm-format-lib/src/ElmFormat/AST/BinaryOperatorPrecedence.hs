@@ -5,6 +5,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import qualified Data.Text as Text
 
 
 data Tree op e
@@ -75,7 +76,7 @@ parsePrecedence' precedenceMap b ((a, op) : rest) [] =
 parsePrecedence' _ last [] [] = Right last
 parsePrecedence' precedenceMap prev stack ((op, next) : rest) =
     let
-        prec o = fromMaybe (Precedence 0 NonAssociate) $ Map.lookup o precedenceMap
+        prec o = fromMaybe (Precedence 1 LeftAssociate) $ Map.lookup o precedenceMap
     in
     case stack of
         (a, opPrev) : restStack
@@ -94,7 +95,7 @@ parsePrecedence' precedenceMap prev stack ((op, next) : rest) =
             && (associativity (prec op) == NonAssociate
                 || associativity (prec opPrev) /= associativity (prec op))
           ->
-            Left "conflicting associativity"
+            Left ("Conflicting associativity for " <> Text.pack (show opPrev) <> " and " <> Text.pack (show op))
 
         _ ->
             parsePrecedence' precedenceMap

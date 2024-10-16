@@ -631,13 +631,13 @@ instance FromJSON TypedParameter where
 
 data Definition
     = Definition
-        { name_d :: LowercaseIdentifier
+        { pattern_d :: Pattern
         , parameters_d :: List TypedParameter
         , returnType :: Maybe (LocatedIfRequested Type_)
         , expression :: LocatedIfRequested Expression
         }
-    | TODO_Definition (List String)
     deriving (Data)
+
 
 mkDefinition ::
     Config
@@ -647,31 +647,24 @@ mkDefinition ::
     -> ASTNS Located [UppercaseIdentifier] 'ExpressionNK
     -> Definition
 mkDefinition config pat args annotation expr =
-    case pat of
-        AST.VarPattern name ->
-            let
-                (typedParams, returnType) =
-                    maybe
-                        ( fmap (, Nothing) args, Nothing )
-                        ((\(a,b) -> ( fmap (fmap Just) a, Just b )) . PatternMatching.matchType args . (\(C (c1, c2) t) -> t))
-                        annotation
-            in
-            Definition
-                name
-                (fmap (\(C c pat, typ) -> TypedParameter (fromRawAST config pat) (fmap (fromRawAST config) typ)) typedParams)
-                (fmap (fromRawAST config) returnType)
-                (fromRawAST config expr)
+    let
+        (typedParams, returnType) =
+            maybe
+                ( fmap (, Nothing) args, Nothing )
+                ((\(a,b) -> ( fmap (fmap Just) a, Just b )) . PatternMatching.matchType args . (\(C (c1, c2) t) -> t))
+                annotation
+    in
+    Definition
+        (fromRawAST' config pat)
+        (fmap (\(C c pat, typ) -> TypedParameter (fromRawAST config pat) (fmap (fromRawAST config) typ)) typedParams)
+        (fmap (fromRawAST config) returnType)
+        (fromRawAST config expr)
 
-        _ ->
-            TODO_Definition
-                [ show pat
-                , show args
-                , show annotation
-                , show expr
-                ]
 
 fromDefinition :: Definition -> List (ASTNS Identity [UppercaseIdentifier] 'CommonDeclarationNK)
-fromDefinition = \case
+fromDefinition = undefined
+{-
+  \case
     Definition name parameters Nothing expression ->
         pure $ I.Fix $ Identity $ AST.Definition
             (I.Fix $ Identity $ AST.VarPattern name)
@@ -700,6 +693,7 @@ fromDefinition = \case
             []
             (toRawAST expression)
         ]
+-}
 
 type DefinitionBuilder a
     = Either a (ASTNS1 Located [UppercaseIdentifier] 'CommonDeclarationNK)
@@ -758,12 +752,6 @@ instance ToPairs Definition where
                 , "parameters" .= parameters
                 , "returnType" .= returnType
                 , "expression" .= expression
-                ]
-
-        TODO_Definition info ->
-            mconcat
-                [ type_ "TODO: Definition"
-                , "$" .= info
                 ]
 
 instance FromJSON Definition where

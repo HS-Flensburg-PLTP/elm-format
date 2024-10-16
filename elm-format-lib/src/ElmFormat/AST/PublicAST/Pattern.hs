@@ -35,6 +35,7 @@ data Pattern
         { alias :: VariableDefinition
         , pattern :: LocatedIfRequested Pattern
         }
+    | OpPattern SymbolIdentifier
     deriving (Data)
 
 mkListPattern :: List (LocatedIfRequested Pattern) -> Maybe (LocatedIfRequested Pattern) -> Pattern
@@ -62,8 +63,8 @@ instance ToPublicAST 'PatternNK where
         AST.VarPattern name ->
             VariablePattern $ VariableDefinition name
 
-        AST.OpPattern _ ->
-            error "PublicAST: OpPattern is not supported in Elm 0.19"
+        AST.OpPattern name ->
+            OpPattern name
 
         AST.DataPattern (namespace, tag) args ->
             DataPattern
