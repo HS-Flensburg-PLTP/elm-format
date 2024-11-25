@@ -631,7 +631,7 @@ instance FromJSON TypedParameter where
 
 data Definition
     = Definition
-        { pattern_d :: Pattern
+        { pattern_d :: LocatedIfRequested Pattern
         , parameters_d :: List TypedParameter
         , returnType :: Maybe (LocatedIfRequested Type_)
         , expression :: LocatedIfRequested Expression
@@ -641,7 +641,7 @@ data Definition
 
 mkDefinition ::
     Config
-    -> ASTNS1 Located [UppercaseIdentifier] 'PatternNK
+    -> ASTNS Located [UppercaseIdentifier] 'PatternNK
     -> List (AST.C1 'AST.BeforeTerm (ASTNS Located [UppercaseIdentifier] 'PatternNK))
     -> Maybe (AST.C2 'AST.BeforeSeparator 'AST.AfterSeparator (ASTNS Located [UppercaseIdentifier] 'TypeNK))
     -> ASTNS Located [UppercaseIdentifier] 'ExpressionNK
@@ -655,7 +655,7 @@ mkDefinition config pat args annotation expr =
                 annotation
     in
     Definition
-        (fromRawAST' config pat)
+        (fromRawAST config pat)
         (fmap (\(C c pat, typ) -> TypedParameter (fromRawAST config pat) (fmap (fromRawAST config) typ)) typedParams)
         (fmap (fromRawAST config) returnType)
         (fromRawAST config expr)
@@ -720,7 +720,7 @@ mkDefinitions config fromDef items =
         merge :: DefinitionBuilder a -> Maybe a
         merge decl =
             case decl of
-                Right (AST.Definition (I.Fix (At _ pat)) args comments expr) ->
+                Right (AST.Definition pattern@(I.Fix (At _ pat)) args comments expr) ->
                     let
                         annotation =
                             case pat of
@@ -728,7 +728,7 @@ mkDefinitions config fromDef items =
                                     Map.lookup name annotations
                                 _ -> Nothing
                     in
-                    Just $ fromDef $ mkDefinition config pat args annotation expr
+                    Just $ fromDef $ mkDefinition config pattern args annotation expr
 
                 Right (AST.TypeAnnotation _ _) ->
                     -- TODO: retain annotations that don't have a matching definition
