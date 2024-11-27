@@ -67,12 +67,12 @@ instance ToPublicAST 'TypeNK where
             TupleType
                 (fmap (\(C comments a) -> fromRawAST config a) terms)
 
-        AST.RecordType base fields comments multiline ->
+        AST.RecordType base fields fieldNames comments multiline ->
             RecordType
                 (fmap (\(C comments a) -> a) base)
                 (Map.fromList $ (\(C cp (Pair (C ck key) (C cv value) ml)) -> (key, fromRawAST config value)) <$> AST.toCommentedList fields)
                 $ RecordDisplay
-                    (extract . _key . extract <$> AST.toCommentedList fields)
+                    (extract <$> AST.toCommentedList fieldNames)
 
         AST.FunctionType first rest multiline ->
             case firstRestToRestLast first (AST.toCommentedList rest) of
@@ -116,6 +116,7 @@ instance FromPublicAST 'TypeNK where
             AST.RecordType
                 (C ([], []) <$> base)
                 (Either.fromRight undefined $ AST.fromCommentedList ((\(key, value) -> C ([], [], Nothing) $ Pair (C [] key) (C [] $ toRawAST value) (AST.ForceMultiline False)) <$> Map.toList fields))
+                (Either.fromRight undefined $ AST.fromCommentedList (map (C ([], [], Nothing))(fieldOrder display)))
                 []
                 (AST.ForceMultiline True)
 

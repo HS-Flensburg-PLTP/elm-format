@@ -120,7 +120,7 @@ instance FromJSONKey ModuleName where
 
 newtype VariableDefinition
     = VariableDefinition
-        { name :: LowercaseIdentifier
+        { name :: Located LowercaseIdentifier
         }
     deriving (Data)
 
@@ -143,7 +143,7 @@ instance FromJSON VariableDefinition where
 
 newtype RecordDisplay
     = RecordDisplay
-        { fieldOrder :: List LowercaseIdentifier
+        { fieldOrder :: List (Located LowercaseIdentifier)
         }
     deriving (Data, Generic)
 
@@ -193,6 +193,9 @@ instance ToPairs a => ToJSON (Located a) where
     toEncoding (A.At region a) =
         pairs (toPairs a <> "sourceLocation" .= region)
 
+instance FromJSON (Located a) where
+    parseJSON = error "parseJSON for Located not implemented yet"
+
 
 instance ToJSON Region where
     toJSON = undefined
@@ -231,11 +234,19 @@ instance FromJSONKey UppercaseIdentifier where
 instance ToJSON LowercaseIdentifier where
     toJSON = undefined
     toEncoding (LowercaseIdentifier name) = toEncoding name
+
 instance ToJSONKey LowercaseIdentifier where
     toJSONKey =
         ToJSONKeyText
             (\(LowercaseIdentifier name) -> AesonKey.fromString name)
             (\(LowercaseIdentifier name) -> AesonInternal.string name)
+
+instance ToPairs LowercaseIdentifier where
+    toPairs name =
+        mconcat
+            [ type_ "LowercaseIdentifier"
+            , "name" .= name
+            ]
 
 instance FromJSON LowercaseIdentifier where
     parseJSON = withText "LowercaseIdentifier" $ \case

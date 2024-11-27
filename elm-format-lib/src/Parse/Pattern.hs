@@ -21,7 +21,7 @@ basic elmVersion =
   fmap I.Fix $ addLocation $
     choice
       [ char '_' >> return Anything
-      , VarPattern <$> lowVar elmVersion
+      , VarPattern <$> addLocation (lowVar elmVersion)
       , chunksToPattern <$> dotSep1 (capVar elmVersion)
       , LiteralPattern <$> Literal.literal
       ]
@@ -57,7 +57,7 @@ asPattern elmVersion patternParser =
     asAlias =
       do  preAs <- try (whitespace <* reserved elmVersion "as")
           postAs <- whitespace
-          var <- lowVar elmVersion
+          var <- addLocation (lowVar elmVersion)
           return (preAs, C postAs var)
 
 
@@ -65,7 +65,7 @@ record :: ElmVersion -> IParser (FixAST Located typeRef ctorRef varRef 'PatternN
 record elmVersion =
   fmap I.Fix $ addLocation $
   do
-      result <- surround'' '{' '}' (lowVar elmVersion)
+      result <- surround'' '{' '}' (addLocation (lowVar elmVersion))
       return $
           case result of
               Left comments ->

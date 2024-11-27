@@ -247,12 +247,12 @@ instance ToPublicAST 'ExpressionNK where
             VariableReferenceExpression
                 (mkReference $ OpRef $ SymbolIdentifier $ replicate (n-1) ',')
 
-        AST.Record base fields comments multiline ->
+        AST.Record base fields fieldNames comments multiline ->
             RecordLiteral
                 (fmap (\(C comments a) -> a) base)
                 (Map.fromList $ (\(C cp (Pair (C ck key) (C cv value) ml)) -> (key, fromRawAST config value)) <$> AST.toCommentedList fields)
                 $ RecordDisplay
-                    (extract . _key . extract <$> AST.toCommentedList fields)
+                    (extract <$> AST.toCommentedList fieldNames)
 
         AST.Access base field ->
             FunctionApplication
@@ -351,6 +351,7 @@ instance FromPublicAST 'ExpressionNK where
             AST.Record
                 (C ([], []) <$> base)
                 (Either.fromRight undefined $ AST.fromCommentedList $ C ([], [], Nothing) . (\(field, expression) -> Pair (C [] field) (C [] $ toRawAST expression) (AST.ForceMultiline False)) <$> Map.toList fields)
+                (Either.fromRight undefined $ AST.fromCommentedList (map (C ([], [], Nothing))(fieldOrder display)))
                 []
                 (AST.ForceMultiline True)
 
@@ -725,7 +726,7 @@ mkDefinitions config fromDef items =
                         annotation =
                             case pat of
                                 AST.VarPattern name ->
-                                    Map.lookup name annotations
+                                    Map.lookup (extract name) annotations
                                 _ -> Nothing
                     in
                     Just $ fromDef $ mkDefinition config pattern args annotation expr
