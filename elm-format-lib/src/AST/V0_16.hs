@@ -19,6 +19,7 @@ import qualified Cheapskate.Types as Markdown
 import ElmFormat.AST.Shared
 import qualified Data.Maybe as Maybe
 import Data.Text (Text)
+import Reporting.Annotation (Located)
 
 
 newtype ForceMultiline =
@@ -306,12 +307,12 @@ data AST typeRef ctorRef varRef (getType :: NodeKind -> Type) (kind :: NodeKind)
         -> C1 'BeforeTerm (getType 'TypeNK)
         -> AST typeRef ctorRef varRef getType 'TopLevelDeclarationNK
     PortAnnotation ::
-        C2 'BeforeTerm 'AfterTerm LowercaseIdentifier
+        C2 'BeforeTerm 'AfterTerm (Located LowercaseIdentifier)
         -> Comments
         -> getType 'TypeNK
         -> AST typeRef ctorRef varRef getType 'TopLevelDeclarationNK
     PortDefinition_until_0_16 ::
-        C2 'BeforeTerm 'AfterTerm LowercaseIdentifier
+        C2 'BeforeTerm 'AfterTerm (Located LowercaseIdentifier)
         -> Comments
         -> getType 'ExpressionNK
         -> AST typeRef ctorRef varRef getType 'TopLevelDeclarationNK
@@ -384,6 +385,7 @@ data AST typeRef ctorRef varRef (getType :: NodeKind -> Type) (kind :: NodeKind)
     Record ::
         { base_r :: Maybe (C2 'BeforeTerm 'AfterTerm LowercaseIdentifier)
         , fields_r :: Sequence (Pair LowercaseIdentifier (getType 'ExpressionNK))
+        , fieldNames_r :: Sequence (Located LowercaseIdentifier)
         , trailingComments_r :: Comments
         , forceMultiline_r :: ForceMultiline
         }
@@ -450,7 +452,7 @@ data AST typeRef ctorRef varRef (getType :: NodeKind -> Type) (kind :: NodeKind)
         LiteralValue
         -> AST typeRef ctorRef varRef getType 'PatternNK
     VarPattern ::
-        LowercaseIdentifier
+        Located LowercaseIdentifier
         -> AST typeRef ctorRef varRef getType 'PatternNK
     OpPattern ::
         SymbolIdentifier
@@ -480,11 +482,11 @@ data AST typeRef ctorRef varRef (getType :: NodeKind -> Type) (kind :: NodeKind)
         Comments
         -> AST typeRef ctorRef varRef getType 'PatternNK
     RecordPattern ::
-        [C2 'BeforeTerm 'AfterTerm LowercaseIdentifier]
+        [C2 'BeforeTerm 'AfterTerm (Located LowercaseIdentifier)]
         -> AST typeRef ctorRef varRef getType 'PatternNK
     Alias ::
         C1 'AfterTerm (getType 'PatternNK)
-        -> C1 'BeforeTerm LowercaseIdentifier
+        -> C1 'BeforeTerm (Located LowercaseIdentifier)
         -> AST typeRef ctorRef varRef getType 'PatternNK
 
 
@@ -513,6 +515,7 @@ data AST typeRef ctorRef varRef (getType :: NodeKind -> Type) (kind :: NodeKind)
     RecordType ::
         { base_rt :: Maybe (C2 'BeforeTerm 'AfterTerm LowercaseIdentifier)
         , fields_rt :: Sequence (Pair LowercaseIdentifier (getType 'TypeNK))
+        , fieldNames_rt :: Sequence (Located LowercaseIdentifier)
         , trailingComments_rt :: Comments
         , forceMultiline_rt :: ForceMultiline
         }
@@ -581,7 +584,7 @@ mapAll ftyp fctor fvar fast = \case
     Range left right ml -> Range (fmap fast left) (fmap fast right) ml
     Tuple terms ml -> Tuple (fmap (fmap fast) terms) ml
     TupleFunction n -> TupleFunction n
-    Record base fields c ml -> Record base (fmap (fmap fast) fields) c ml
+    Record base fields fieldNames c ml -> Record base (fmap (fmap fast) fields) fieldNames c ml
     Access e field -> Access (fast e) field
     AccessFunction field -> AccessFunction field
     Lambda args c e ml -> Lambda (fmap (fmap fast) args) c (fast e) ml
@@ -615,7 +618,7 @@ mapAll ftyp fctor fvar fast = \case
     TypeConstruction name args forceMultiline -> TypeConstruction (fmap ftyp name) (fmap (fmap fast) args) forceMultiline
     TypeParens typ -> TypeParens (fmap fast typ)
     TupleType typs forceMultiline -> TupleType (fmap (fmap fast) typs) forceMultiline
-    RecordType base fields c ml -> RecordType base (fmap (fmap fast) fields) c ml
+    RecordType base fields fieldNames c ml -> RecordType base (fmap (fmap fast) fields) fieldNames c ml
     FunctionType first rest ml -> FunctionType (fmap fast first) (fmap fast rest) ml
 
 
@@ -654,7 +657,7 @@ topDownReferencesWithContext defineLocal fType fCtor fVar initialContext initial
             Anything -> mempty
             UnitPattern _ -> mempty
             LiteralPattern _ -> mempty
-            VarPattern l -> Const $ pure $ VarName l
+            VarPattern l -> Const $ pure $ VarName (extract l)
             OpPattern _ -> mempty
             DataPattern _ args -> foldMap extract args
             PatternParens p -> extract p
@@ -663,8 +666,8 @@ topDownReferencesWithContext defineLocal fType fCtor fVar initialContext initial
             ListPattern ps -> foldMap extract ps
             ConsPattern p ps -> extract p <> fold ps
             EmptyRecordPattern _ -> mempty
-            RecordPattern ps -> Const $ fmap (VarName . extract) ps
-            Alias p name -> extract p <> Const (pure $ VarName $ extract name)
+            RecordPattern ps -> Const $ fmap (VarName . extract . extract) ps
+            Alias p name -> extract p <> Const (pure $ VarName $ extract $ extract name)
 
         namesFromPattern ::
             Coapplicative ann' =>
@@ -687,8 +690,8 @@ topDownReferencesWithContext defineLocal fType fCtor fVar initialContext initial
                     TypeName name
                     : fmap (\(NameWithArgs name _) -> CtorName name) (toList tags)
                 TypeAlias _ (C _ (NameWithArgs name _)) _ -> [TypeName name]
-                PortAnnotation (C _ name) _ _ -> [VarName name]
-                PortDefinition_until_0_16 (C _ name) _ _ -> [VarName name]
+                PortAnnotation (C _ locatedName) _ _ -> [VarName (extract locatedName)]
+                PortDefinition_until_0_16 (C _ locatedName) _ _ -> [VarName (extract locatedName)]
                 Fixity_until_0_18 _ _ _ _ _ -> []
                 Fixity _ _ _ _ -> []
 

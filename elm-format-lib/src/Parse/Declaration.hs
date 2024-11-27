@@ -129,7 +129,7 @@ port elmVersion =
   fmap I.Fix $ addLocation $
   do  try (reserved elmVersion "port")
       preNameComments <- whitespace
-      name <- lowVar elmVersion
+      name <- addLocation (lowVar elmVersion)
       postNameComments <- whitespace
       let name' = C (preNameComments, postNameComments) name
       choice [ portAnnotation name', portDefinition name' ]

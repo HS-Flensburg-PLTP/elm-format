@@ -126,8 +126,12 @@ recordTerm elmVersion =
     addLocation $ brackets' $ checkMultiline $
         do
             base <- optionMaybe $ try (commented (lowVar elmVersion) <* string "|")
-            (fields, trailing) <- sectionedGroup (pair (lowVar elmVersion) lenientEquals (expr elmVersion))
-            return $ Record base fields trailing
+            (fields, trailing) <- sectionedGroup (pair (addLocation (lowVar elmVersion)) lenientEquals (expr elmVersion))
+            return $ Record
+                        base
+                        (fmap (mapPair extract id) fields)
+                        (fmap (extract . _key) fields)
+                        trailing
 
 
 term :: ElmVersion -> IParser (ASTNS Located [UppercaseIdentifier] 'ExpressionNK)

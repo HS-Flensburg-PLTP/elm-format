@@ -141,7 +141,7 @@ data TopLevelStructure
         }
     | Comment_tls Comment
     | Port
-        { name_p :: LowercaseIdentifier
+        { name_p :: Located LowercaseIdentifier
         , type_p :: Maybe (LocatedIfRequested Type_) }
     | TODO_TopLevelStructure String
     deriving (Data)
@@ -168,8 +168,8 @@ fromTopLevelStructures config (I.Fix (At _ (AST.TopLevel decls))) =
                                 ((\(C c a) -> a) <$> args)
                                 ((\(C c a) -> mkCustomTypeVariant config a) <$> AST.toCommentedList variants)
 
-                        AST.PortAnnotation (C _ lowercaseIdent) _ t ->
-                            Left $ Port lowercaseIdent (Just (fromRawAST config t))
+                        AST.PortAnnotation (C _ identifier) _ t ->
+                            Left $ Port identifier (Just (fromRawAST config t))
 
                         other ->
                             Left $ TODO_TopLevelStructure ("TODO: " ++ show other)

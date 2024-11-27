@@ -90,7 +90,7 @@ foldReferences ftype fctor fvar =
             Range left right _ -> extract left <> extract right
             Tuple terms _ -> mconcat $ fmap extract terms
             TupleFunction _ -> mempty
-            Record _ fields _ _ -> foldMap (extract . _value) fields
+            Record _ fields _ _ _ -> foldMap (extract . _value) fields
             Access e _ -> e
             AccessFunction _ -> mempty
             Lambda args _ e _ -> Const (foldMap (getConst . extract) args <> getConst e)
@@ -124,7 +124,7 @@ foldReferences ftype fctor fvar =
             TypeConstruction name args _ -> Const (foldTypeConstructor name <> foldMap (getConst . extract) args)
             TypeParens typ -> extract typ
             TupleType terms _ -> foldMap extract terms
-            RecordType _ fields _ _ -> foldMap (extract . _value) fields
+            RecordType _ fields _ _ _ -> foldMap (extract . _value) fields
             FunctionType first rest _ -> extract first <> fold rest
 
         foldTypeConstructor :: TypeConstructor typeRef -> a

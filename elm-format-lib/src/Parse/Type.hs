@@ -44,8 +44,12 @@ record elmVersion =
     fmap I.Fix $ addLocation $ brackets' $ checkMultiline $
         do
             base' <- optionMaybe $ try (commented (lowVar elmVersion) <* string "|")
-            (fields', trailing) <- sectionedGroup (pair (lowVar elmVersion) lenientHasType (expr elmVersion))
-            return $ RecordType base' fields' trailing
+            (fields', trailing) <- sectionedGroup (pair (addLocation (lowVar elmVersion)) lenientHasType (expr elmVersion))
+            return $ RecordType
+                        base'
+                        (fmap (mapPair extract id) fields')
+                        (fmap (extract . _key) fields')
+                        trailing
 
 
 capTypeVar :: ElmVersion -> IParser [UppercaseIdentifier]

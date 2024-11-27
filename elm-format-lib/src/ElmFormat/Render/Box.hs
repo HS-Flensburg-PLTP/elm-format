@@ -313,13 +313,13 @@ formatModuleHeader elmVersion addDefaultHeader modu =
           case fmap (extract . I.unFix) decl of
               DocComment _ -> []
               BodyComment _ -> []
-              Entry (PortAnnotation (C _ (LowercaseIdentifier name)) _ _) -> [ AST.Listing.Value (LowercaseIdentifier name) ]
+              Entry (PortAnnotation (C _ (A.At _ (LowercaseIdentifier name))) _ _) -> [ AST.Listing.Value (LowercaseIdentifier name) ]
               Entry (CommonDeclaration def) ->
                 case extract $ I.unFix def of
                     Definition pat _ _ _ ->
                         case extract $ I.unFix pat of
-                            VarPattern (LowercaseIdentifier name) -> [ AST.Listing.Value (LowercaseIdentifier name) ]
-                            RecordPattern fields -> fmap (AST.Listing.Value . extract) fields
+                            VarPattern (A.At _ (LowercaseIdentifier name)) -> [ AST.Listing.Value (LowercaseIdentifier name) ]
+                            RecordPattern fields -> fmap (AST.Listing.Value . extract . extract) fields
                             _ -> []
                     _ -> []
               Entry (Datatype (C _ (NameWithArgs (UppercaseIdentifier name) _)) _) -> [ AST.Listing.Union (C [] (UppercaseIdentifier name)) (AST.Listing.OpenListing (C ([], []) ()))]
@@ -546,7 +546,7 @@ formatModuleBody linesBetween elmVersion importInfo body =
                         Definition pat _ _ _ ->
                             case extract $ I.unFix pat of
                                 VarPattern name ->
-                                    BodyNamed $ VarRef () name
+                                    BodyNamed $ VarRef () (extract name)
 
                                 OpPattern name ->
                                     BodyNamed $ OpRef name
@@ -564,10 +564,10 @@ formatModuleBody linesBetween elmVersion importInfo body =
                     BodyNamed $ TagRef () name
 
                 PortDefinition_until_0_16 (C _ name) _ _ ->
-                    BodyNamed $ VarRef () name
+                    BodyNamed $ VarRef () (extract name)
 
                 PortAnnotation (C _ name) _ _ ->
-                    BodyNamed $ VarRef () name
+                    BodyNamed $ VarRef () (extract name)
 
                 Fixity_until_0_18 _ _ _ _ _ ->
                     BodyFixity
@@ -1056,13 +1056,13 @@ formatDeclaration elmVersion importInfo decl =
         PortAnnotation name typeComments typ ->
             ElmStructure.definition ":" False
             (line $ keyword "port")
-            [ formatCommented $ fmap (line . formatLowercaseIdentifier elmVersion []) name ]
+            [ formatCommented $ fmap (line . formatLowercaseIdentifier elmVersion []) (fmap extract name) ]
             (formatCommented' typeComments $ typeParens NotRequired $ formatType elmVersion typ)
 
         PortDefinition_until_0_16 name bodyComments expr ->
             ElmStructure.definition "=" True
             (line $ keyword "port")
-            [formatCommented $ fmap (line . formatLowercaseIdentifier elmVersion []) name]
+            [formatCommented $ fmap (line . formatLowercaseIdentifier elmVersion []) (fmap extract name)]
             (formatCommented' bodyComments $ syntaxParens SyntaxSeparated $ formatExpression elmVersion importInfo expr)
 
         Fixity_until_0_18 assoc precedenceComments precedence nameComments name ->
@@ -1161,7 +1161,7 @@ formatPattern elmVersion apattern =
             (,) SyntaxSeparated $ formatLiteral elmVersion lit
 
         VarPattern var ->
-            (,) SyntaxSeparated $ line $ formatLowercaseIdentifier elmVersion [] var
+            (,) SyntaxSeparated $ line $ formatLowercaseIdentifier elmVersion [] (extract var)
 
         OpPattern (SymbolIdentifier name) ->
             (,) SyntaxSeparated $ line $ identifier $ "(" ++ name ++ ")"
@@ -1229,13 +1229,13 @@ formatPattern elmVersion apattern =
 
         RecordPattern fields ->
             (,) SyntaxSeparated $
-            ElmStructure.group True "{" "," "}" False $ map (formatCommented . fmap (line . formatLowercaseIdentifier elmVersion [])) fields
+            ElmStructure.group True "{" "," "}" False $ map (formatCommented . fmap (line . formatLowercaseIdentifier elmVersion [] . extract)) fields
 
         Alias pattern name ->
           (,) SpaceSeparated $
           case
             ( formatTailCommented $ fmap (syntaxParens SpaceSeparated . formatPattern elmVersion) pattern
-            , formatPreCommented $ fmap (line . formatLowercaseIdentifier elmVersion []) name
+            , formatPreCommented $ fmap (line . formatLowercaseIdentifier elmVersion [] . extract) name
             )
           of
             (SingleLine pattern', SingleLine name') ->
@@ -1328,18 +1328,18 @@ formatExpression elmVersion importInfo aexpr =
                 Elm_0_19 -> formatRange_0_18 elmVersion importInfo left right
 
         ExplicitList exprs trailing multiline ->
-            (,) SyntaxSeparated $ 
+            (,) SyntaxSeparated $
             formatSequence '[' ',' (Just ']')
                 multiline
                 trailing
                 (syntaxParens SyntaxSeparated . formatExpression elmVersion importInfo <$> exprs)
 
         Binops left ops multiline ->
-            (,) InfixSeparated $ 
+            (,) InfixSeparated $
             formatBinops elmVersion importInfo left ops multiline
 
         Lambda patterns bodyComments expr multiline ->
-            (,) AmbiguousEnd $ 
+            (,) AmbiguousEnd $
             case
                 ( multiline
                 , allSingles $ fmap (formatPreCommented . fmap (syntaxParens SpaceSeparated . formatPattern elmVersion)) patterns
@@ -1560,7 +1560,7 @@ formatExpression elmVersion importInfo aexpr =
             (,) SyntaxSeparated $
             line $ identifier $ "." ++ formatVarName' elmVersion field
 
-        Record base fields trailing multiline ->
+        Record base fields _ trailing multiline ->
             (,) SyntaxSeparated $
             formatRecordLike
                 (fmap (line . formatLowercaseIdentifier elmVersion []) <$> base)
@@ -2119,7 +2119,7 @@ formatType elmVersion atype =
             (,) NotNeeded $
             ElmStructure.group True "(" "," ")" forceMultiline (fmap (formatC2Eol . fmap (typeParens NotRequired . formatType elmVersion)) types)
 
-        RecordType base fields trailing multiline ->
+        RecordType base fields _ trailing multiline ->
             (,) NotNeeded $
             formatRecordLike
                 (fmap (line . formatLowercaseIdentifier elmVersion []) <$> base)

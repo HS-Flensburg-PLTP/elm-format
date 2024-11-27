@@ -32,7 +32,7 @@ data Pattern
         { fields :: List VariableDefinition
         }
     | PatternAlias
-        { alias :: VariableDefinition
+        { alias :: Located LowercaseIdentifier
         , pattern :: LocatedIfRequested Pattern
         }
     | OpPattern SymbolIdentifier
@@ -104,7 +104,7 @@ instance ToPublicAST 'PatternNK where
 
         AST.Alias (C comments1 pat) (C comments2 name) ->
             PatternAlias
-                (VariableDefinition name)
+                name
                 (fromRawAST config pat)
 
 instance FromPublicAST 'PatternNK where
@@ -163,7 +163,7 @@ instance FromPublicAST 'PatternNK where
         PatternAlias alias pattern  ->
             AST.Alias
                 (C [] $ toRawAST pattern)
-                (C [] $ Core.name alias)
+                (C [] $ alias)
 
 
 instance ToJSON Pattern where
